@@ -30,6 +30,9 @@ import { type ClientApi, getClientApi } from "../client/api";
 import { useAccessStore } from "../store";
 import clsx from "clsx";
 import { initializeMcpSystem, isMcpEnabled } from "../mcp/actions";
+import { useSearchParams } from 'next/navigation';
+import Script from 'next/script';
+
 
 export function Loading(props: { noLogo?: boolean }) {
   return (
@@ -166,6 +169,10 @@ function Screen() {
   const isSd = location.pathname === Path.Sd;
   const isSdNew = location.pathname === Path.SdNew;
 
+  const searchParams = [...useSearchParams().entries()]
+
+  console.log('test 从小程序url收到的数据', searchParams)
+
   const isMobileScreen = useMobileScreen();
   const shouldTightBorder =
     getClientConfig()?.isApp || (config.tightBorder && !isMobileScreen);
@@ -215,6 +222,20 @@ function Screen() {
         [styles["rtl-screen"]]: getLang() === "ar",
       })}
     >
+      <Script
+        src="https://res.wx.qq.com/open/js/jweixin-1.3.2.js"
+        strategy="afterInteractive" // 策略：页面可交互后加载
+        onLoad={() => {
+          // @ts-expect-error, wx jssdk 加载完成后
+          console.log('test wx加载完成', wx)
+          console.log('test 从页面向小程序发送消息')
+          // @ts-expect-error, send message to wmp
+          wx.miniProgram.postMessage({
+            data: { type: 'reply', content: 'Hello from WebView' },
+          })
+        }}
+      />
+      {`test 从小程序url收到的数据: ${searchParams}`}
       {renderContent()}
     </div>
   );
